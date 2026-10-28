@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 
 @dataclass(frozen=True, slots=True)
 class Settings:
-    gemini_api_key: str
-    gemini_model: str
+    xai_api_key: str
+    grok_model: str
 
 
 def get_settings() -> Settings:
@@ -26,13 +26,13 @@ def get_settings() -> Settings:
     try:
         import streamlit as st
 
-        secret_key = str(st.secrets.get("GEMINI_API_KEY", ""))
-        secret_model = str(st.secrets.get("GEMINI_MODEL", ""))
+        secret_key = str(st.secrets.get("XAI_API_KEY", ""))
+        secret_model = str(st.secrets.get("GROK_MODEL", ""))
     except Exception:
         # Streamlit secrets are optional outside a Streamlit runtime.
         pass
 
     return Settings(
-        gemini_api_key=secret_key or os.getenv("GEMINI_API_KEY", ""),
-        gemini_model=secret_model or os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+        xai_api_key=secret_key or os.getenv("XAI_API_KEY", ""),
+        grok_model=secret_model or os.getenv("GROK_MODEL", "grok-4.7"),
     )

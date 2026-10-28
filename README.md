@@ -20,7 +20,7 @@ This is a separate demo repository: [`23-mid-0347/PromptVault-demo`](https://git
 
 - Python 3.11 or newer (use the Python version supported by your PromptVault library checkout).
 - Access to the PromptVault package, either installed in the environment or installed from a local checkout.
-- Optional Gemini API key for real chat requests.
+- An xAI API key for real chat requests. xAI API usage is billed separately from the consumer Grok app.
 - Synthetic test conversations only for the initial demo. Review provider data-use terms before submitting anything sensitive.
 
 ## Quick start
@@ -35,7 +35,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Edit `.env` and add `GEMINI_API_KEY` if you plan to use Gemini. Never commit `.env`.
+Edit `.env` and add `XAI_API_KEY` if you plan to use Grok. API use may require credits or billing setup in the xAI Console. Never commit `.env`.
 
 Install PromptVault in the same environment using the project's current documented method. For a local sibling checkout, adapt the path:
 
@@ -63,7 +63,7 @@ Offline tests do not require an API key. Provider integration is only available 
 ## First-run checklist
 
 1. [ ] Verify the PromptVault package import and public constructor/result fields against the actual core repository.
-2. [ ] Configure the Gemini API key in `.env` or Streamlit secrets.
+2. [ ] Configure the xAI API key in `.env` or Streamlit secrets.
 3. [ ] Start with the small included synthetic dataset.
 4. [ ] Run the test case in Full history and PromptVault modes with the exact same model and settings.
 5. [ ] Inspect the diagnostics and confirm local token estimates are clearly labelled as estimates.
@@ -78,7 +78,7 @@ PromptVault-demo/
 │   ├── config.py
 │   ├── providers/
 │   │   ├── base.py
-│   │   └── gemini.py
+│   │   └── grok.py
 │   ├── strategies.py
 │   ├── chat_service.py
 │   ├── metrics.py
@@ -96,16 +96,16 @@ PromptVault-demo/
 
 ## Provider and privacy note
 
-Gemini is the first planned API adapter. Free-tier eligibility, model IDs, context limits, rate limits, pricing, and data-use terms can change. Check the provider's current official documentation before running experiments. The Google AI Studio free tier may use submitted content to improve Google's products; use only synthetic prompts for this demo unless the applicable terms have been reviewed and data owners have approved.
+Grok via xAI is the configured API adapter. Free-tier eligibility, model IDs, context limits, rate limits, pricing, and data-use terms can change. Check the provider's current official documentation before running experiments. Use only synthetic prompts for this demo unless the applicable xAI data-use terms have been reviewed and data owners have approved. API access and billing are separate from any consumer Grok subscription.
 
-- Gemini setup: https://ai.google.dev/gemini-api/docs/get-started
-- Gemini pricing and free-tier conditions: https://ai.google.dev/gemini-api/docs/pricing
-- Gemini generate-content API: https://ai.google.dev/api/generate-content
+- xAI API quickstart: https://docs.x.ai/developers/quickstart
+- xAI model IDs and pricing: https://docs.x.ai/developers/models
+- xAI Responses API: https://docs.x.ai/developers/rest-api-reference/inference/responses
 - Streamlit chat elements: https://docs.streamlit.io/develop/api-reference/chat
 
 ## What is intentionally not implemented yet
 
-- Additional provider adapters (OpenRouter, Groq, xAI/Grok).
+- Additional provider adapters (OpenRouter, Groq, Gemini).
 - RAG/vector database or persistent multi-user storage.
 - Authentication or production deployment.
 - Unverified support for system, tool, image, audio, or other multimodal PromptVault messages.

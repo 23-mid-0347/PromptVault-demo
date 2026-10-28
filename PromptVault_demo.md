@@ -66,7 +66,7 @@ Confirm the actual names and result-field semantics against the checked-out impl
 ### In scope
 
 - A working Streamlit chat interface.
-- A configurable cloud LLM provider, starting with the Gemini API free tier where eligible.
+- A configurable cloud LLM provider, starting with the xAI/Grok API.
 - A provider abstraction so a second API can be added without rewriting chat logic.
 - A switch between full conversation history and PromptVault-compressed history.
 - An automated comparison runner for multiple history strategies.
@@ -87,25 +87,26 @@ Confirm the actual names and result-field semantics against the checked-out impl
 
 ## 4. LLM provider strategy
 
-### Recommended starting point: Gemini API
+### Recommended starting point: xAI / Grok API
 
-Use the official Gemini API as the first provider **if a suitable model is available under the account's free-tier limits**. Select a model with a context window large enough for the test being run, and store the exact model ID in every experiment record. Do not assume that all Gemini models share the same context window or free quota.
+Use the official xAI API as the first provider. The consumer Grok app does not imply free API access; API calls may require credits and are billed separately. Start with the model ID `grok-4.7`, confirm that it is available to the API key, and store the exact model ID in every experiment record.
 
 Official references:
 
-- Gemini API pricing and free-tier conditions: https://ai.google.dev/gemini-api/docs/pricing
-- Gemini API setup: https://ai.google.dev/gemini-api/docs/get-started
+- xAI API setup: https://docs.x.ai/developers/quickstart
+- xAI model IDs and pricing: https://docs.x.ai/developers/models
+- xAI Responses API: https://docs.x.ai/developers/rest-api-reference/inference/responses
 
-Important privacy note: Google states that content submitted under the free tier may be used to improve its products. Use **synthetic conversations only** in this project unless the applicable terms have been checked and the data owner has approved the use.
+Important privacy note: review xAI’s current API data-use and retention terms before submitting any non-synthetic content. Use **synthetic conversations only** in this project until those terms and the data owner’s approval have been checked.
 
 ### Alternative providers
 
 | Provider | Role in this plan | Notes |
 |---|---|---|
-| **Gemini API** | First integration | Has a free tier for eligible models, subject to model- and account-specific limits. Best first option for a low-cost prototype. |
+| **Grok / xAI API** | First integration | API usage is billed separately from the consumer Grok app; check current model pricing and account credits before testing. |
 | **OpenRouter free models** | Optional second integration | Offers API access to free models, with limits on free requests. Model context length, availability, and provider behavior vary, so log the exact model and provider for every run. See https://openrouter.ai/pricing. |
 | **Groq API** | Optional later integration | Rate limits vary by model/account and can change. Check the account's current limits before using it for a benchmark. See https://console.groq.com/docs/rate-limits. |
-| **Grok / xAI API** | Optional paid comparison | The Grok chatbot's free access does not mean API calls are free. The xAI API is usage-billed; see https://docs.x.ai/developers/pricing and https://x.ai/api. |
+| **Gemini API** | Optional alternative | Model availability, quota, pricing, and data-use terms vary by account and model. See https://ai.google.dev/gemini-api/docs/pricing. |
 
 **Do not hard-code an API key or assume a free API is unlimited.** The selected model and its current pricing/rate limits must be checked before running a large benchmark. The demo must show a readable message when quota, rate limit, or billing blocks a request.
 
@@ -214,7 +215,7 @@ The first UI should expose only settings that affect the experiment meaningfully
 
 | Parameter | Initial default / candidates | Reason and validation |
 |---|---|---|
-| `provider` | Gemini | Start with one provider to reduce engineering complexity; keep it replaceable. |
+| `provider` | xAI/Grok | Start with one provider to reduce engineering complexity; keep it replaceable. |
 | `model_id` | Selected from currently available models | Model IDs and free-tier eligibility change. Log the exact ID; don't silently switch models in the middle of a run. |
 | `history_strategy` | `promptvault` in chat screen; all strategies in compare screen | Makes compression behavior easy to demonstrate while retaining a full-history control. |
 | `token_budget` | 2,000 for the first demo; benchmark sweep 512, 1,024, 2,000, 4,000 | Shows how the quality/size trade-off changes. Check the actual PromptVault implementation and effective budget before finalizing. |
@@ -314,7 +315,7 @@ PromptVault-demo/
 │   ├── providers/
 │   │   ├── __init__.py
 │   │   ├── base.py                 # common provider interface/result
-│   │   └── gemini.py               # first API implementation
+│   │   └── grok.py                 # first API implementation
 │   ├── strategies.py               # full, last-N, sliding-window, PromptVault
 │   ├── chat_service.py             # prepare messages and call provider
 │   ├── metrics.py                  # token, quality, latency, cost calculations
@@ -337,7 +338,7 @@ Keep the UI, provider request, context strategy, and metric functions separate. 
 
 - Read keys from environment variables or Streamlit secrets.
 - For local development, use an ignored `.env` file and a loader already accepted by the repository.
-- `.env.example` contains placeholders only, such as `GEMINI_API_KEY=`.
+- `.env.example` contains placeholders only, such as `XAI_API_KEY=`.
 - Never put an API key in source code, screenshots, test fixtures, error messages, or committed output files.
 - Never log raw provider request headers or secrets.
 - Use only synthetic prompts in the initial demo because provider data-use terms differ by tier.
@@ -350,7 +351,7 @@ Keep the UI, provider request, context strategy, and metric functions separate. 
 - [ ] Pull the latest `main` and inspect current `pyproject.toml`, public `PromptVault` API, and README.
 - [ ] Re-run the documented unit, integration, and Ruff commands.
 - [ ] Confirm how `CompressionResult` token fields are counted and whether `compress()` expects the current question separately from history.
-- [ ] Decide which Gemini model is available on the account and fits the first test set. Confirm its current context and rate limits.
+- [ ] Decide which Grok model is available on the account and fits the first test set. Confirm its current context and rate limits.
 
 **Exit condition:** clean baseline tests and one selected model/provider documented. Do not proceed on an assumed API shape.
 
@@ -453,8 +454,8 @@ Do not build all benchmark charts before this works. Once the chat and fact-rete
 
 ## 16. Official references checked for this plan
 
-- Gemini API pricing/free-tier terms: https://ai.google.dev/gemini-api/docs/pricing
-- Gemini API setup: https://ai.google.dev/gemini-api/docs/get-started
+- xAI API model IDs/pricing: https://docs.x.ai/developers/models
+- xAI API setup: https://docs.x.ai/developers/quickstart
 - OpenRouter pricing and free-model limits: https://openrouter.ai/pricing
 - Groq rate limits: https://console.groq.com/docs/rate-limits
 - xAI API information: https://x.ai/api

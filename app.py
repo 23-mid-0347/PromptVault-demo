@@ -6,7 +6,7 @@ import streamlit as st
 
 from demo.chat_service import prepare_history
 from demo.config import get_settings
-from demo.providers.gemini import GeminiProvider
+from demo.providers.grok import GrokProvider
 from demo.strategies import StrategyName
 
 st.set_page_config(page_title="PromptVault Demo", page_icon="🧠", layout="wide")
@@ -26,7 +26,7 @@ with st.sidebar:
         options=[StrategyName.FULL_HISTORY.value, StrategyName.PROMPTVAULT.value],
         format_func=lambda value: "Full history" if value == "full_history" else "PromptVault",
     )
-    model_id = st.text_input("Gemini model ID", value=settings.gemini_model)
+    model_id = st.text_input("Grok model ID", value=settings.grok_model)
     temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
     max_output_tokens = st.number_input(
         "Maximum output tokens", min_value=32, max_value=2048, value=256, step=32
@@ -59,15 +59,15 @@ if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    api_key = settings.gemini_api_key
+    api_key = settings.xai_api_key
     if not api_key:
         with st.chat_message("assistant"):
             st.error(
-                "Gemini API key not found. Add `GEMINI_API_KEY` to `.env` or "
+                "xAI API key not found. Add `XAI_API_KEY` to `.env` or "
                 "`.streamlit/secrets.toml`, then restart the app."
             )
     else:
-        provider = GeminiProvider(api_key=api_key, model_id=model_id)
+        provider = GrokProvider(api_key=api_key, model_id=model_id)
         try:
             prepared = prepare_history(
                 history=st.session_state.messages,
