@@ -1,0 +1,131 @@
+[
+  {
+    "case_id": "direct_recall_001",
+    "messages": [
+      {
+        "role": "user",
+        "content": "My preferred F1 circuit is Silverstone."
+      },
+      {
+        "role": "assistant",
+        "content": "Got it. Silverstone is your preferred circuit."
+      },
+      {
+        "role": "user",
+        "content": "I also like rainy weather photography."
+      },
+      {
+        "role": "assistant",
+        "content": "That sounds like an interesting hobby."
+      },
+      {
+        "role": "user",
+        "content": "I enjoy trying new pasta recipes."
+      },
+      {
+        "role": "assistant",
+        "content": "Any favourite pasta dishes?"
+      }
+    ],
+    "question": "Which F1 circuit did I say I prefer?",
+    "accepted_answers": [
+      "Silverstone",
+      "You prefer Silverstone",
+      "Silverstone is your preferred circuit"
+    ],
+    "supporting_message_indices": [
+      0,
+      1
+    ],
+    "category": "distractor",
+    "notes": "Fact appears before unrelated messages; useful for testing old-fact recall."
+  },
+  {
+    "case_id": "updated_fact_001",
+    "messages": [
+      {
+        "role": "user",
+        "content": "For this example, my favourite team is McLaren."
+      },
+      {
+        "role": "assistant",
+        "content": "Understood, McLaren."
+      },
+      {
+        "role": "user",
+        "content": "Update: my favourite team is now Ferrari, not McLaren."
+      },
+      {
+        "role": "assistant",
+        "content": "Understood, I'll use Ferrari as the updated preference."
+      }
+    ],
+    "question": "Which team is my latest stated favourite?",
+    "accepted_answers": [
+      "Ferrari",
+      "Your latest favourite is Ferrari",
+      "Ferrari, not McLaren"
+    ],
+    "supporting_message_indices": [
+      2,
+      3
+    ],
+    "category": "updated_fact",
+    "notes": "The newer statement should override the earlier preference."
+  },
+  {
+    "case_id": "unanswerable_001",
+    "messages": [
+      {
+        "role": "user",
+        "content": "I am planning to visit a race this year."
+      },
+      {
+        "role": "assistant",
+        "content": "Sounds exciting. Have you chosen one yet?"
+      },
+      {
+        "role": "user",
+        "content": "Not yet; I am comparing schedules."
+      }
+    ],
+    "question": "Which grandstand did I book?",
+    "accepted_answers": [],
+    "supporting_message_indices": [],
+    "category": "unanswerable",
+    "unanswerable": true,
+    "notes": "Correct behaviour is to say booking information was not provided."
+  },
+  {
+    "case_id": "paraphrase_001",
+    "messages": [
+      {
+        "role": "user",
+        "content": "The demo's sample project database is called telemetry_lab."
+      },
+      {
+        "role": "assistant",
+        "content": "I'll refer to the sample database as telemetry_lab."
+      },
+      {
+        "role": "user",
+        "content": "I like hiking on weekends."
+      },
+      {
+        "role": "assistant",
+        "content": "Enjoy the trails!"
+      }
+    ],
+    "question": "What name did I give to the example database?",
+    "accepted_answers": [
+      "telemetry_lab",
+      "The database is telemetry_lab"
+    ],
+    "supporting_message_indices": [
+      0,
+      1
+    ],
+    "category": "paraphrase",
+    "notes": "A simple paraphrased recall question."
+  }
+]

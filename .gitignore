@@ -1,0 +1,95 @@
+
+# ==========================================
+# Environment variables and secrets
+# ==========================================
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# API keys and private credentials
+*.pem
+*.key
+credentials.json
+secrets.json
+
+# ==========================================
+# Python virtual environments
+# ==========================================
+.venv/
+venv/
+env/
+ENV/
+
+# ==========================================
+# Python cache and compiled files
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# ==========================================
+# Testing and code quality tools
+# ==========================================
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+
+# ==========================================
+# Build and packaging artifacts
+# ==========================================
+build/
+dist/
+*.egg-info/
+.eggs/
+wheels/
+pip-wheel-metadata/
+
+# ==========================================
+# Streamlit local configuration
+# ==========================================
+.streamlit/config.toml
+
+# ==========================================
+# Generated experiment outputs
+# Ignore run results but preserve the folder
+# ==========================================
+outputs/*
+!outputs/.gitkeep
+
+# ==========================================
+# Logs and temporary files
+# ==========================================
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+.DS_Store
+
+# ==========================================
+# Editor and IDE settings
+# ==========================================
+.vscode/
+.idea/
+
+# ==========================================
+# Jupyter notebooks
+# ==========================================
+.ipynb_checkpoints/
+
+# ==========================================
+# Local databases
+# ==========================================
+*.sqlite
+*.sqlite3
+*.db
