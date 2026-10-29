@@ -2,7 +2,7 @@
 
 A Streamlit chat and evaluation demo for measuring the trade-off between conversation-history compression, token efficiency, and answer quality.
 
-> **Status:** scaffold / planning implementation. The integration is not considered complete until the PromptVault API has been verified against the local checkout, the app has been exercised with a real provider, and tests pass.
+> **Status:** early scaffold. Do not treat the integration as complete until OpenRouter is tested with a real API call, the PromptVault API is verified against the local core-library checkout, and the tests pass.
 
 ## Goals
 
@@ -10,7 +10,7 @@ A Streamlit chat and evaluation demo for measuring the trade-off between convers
 - Compare Full history, Last-N turns, Sliding window, and PromptVault on the same synthetic cases.
 - Keep provider-reported token usage distinct from local estimates.
 - Track compression time, API latency, factual accuracy, and evidence retention.
-- Export experiment records to CSV and JSONL.
+- Export experiment records to CSV and JSONL as the evaluation phase is implemented.
 
 ## Repository boundary
 
@@ -18,10 +18,10 @@ This is a separate demo repository: [`23-mid-0347/PromptVault-demo`](https://git
 
 ## Requirements
 
-- Python 3.11 or newer (use the Python version supported by your PromptVault library checkout).
-- Access to the PromptVault package, either installed in the environment or installed from a local checkout.
-- An xAI API key for real chat requests. xAI API usage is billed separately from the consumer Grok app.
-- Synthetic test conversations only for the initial demo. Review provider data-use terms before submitting anything sensitive.
+- Python 3.11 or newer (use the Python version supported by the core PromptVault checkout).
+- Access to the PromptVault package, installed in this environment or installed from a local checkout.
+- OpenRouter API key from [OpenRouter Keys](https://openrouter.ai/keys).
+- Synthetic test conversations only for the initial demo; review the data-use terms of the selected model/provider before sharing prompts.
 
 ## Quick start
 
@@ -31,43 +31,50 @@ From this repository folder:
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Edit `.env` and add `XAI_API_KEY` if you plan to use Grok. API use may require credits or billing setup in the xAI Console. Never commit `.env`.
+Edit `.env` and set `OPENROUTER_API_KEY` with your key. Keep `.env` local and never commit it. The starting model is configured as:
 
-Install PromptVault in the same environment using the project's current documented method. For a local sibling checkout, adapt the path:
-
-```bash
-pip install -e ../PromptValt
+```dotenv
+OPENROUTER_MODEL=nvidia/nemotron-3-ultra-550b-a55b:free
 ```
 
-The path above is only an example; make sure it points to your actual core-library checkout and that its public API matches `demo/strategies.py`.
+You can change the model ID in `.env` or in the Streamlit sidebar. For fair benchmark runs, record and keep the exact same model ID for every strategy in that run. Avoid `openrouter/free` auto-routing for comparisons that require a fixed model, because auto-routing can select different models across requests.
 
-Run the app:
+Install PromptVault in the same environment using the core project's current documented method. For a local sibling checkout, adapt the path:
 
 ```bash
-streamlit run app.py
+python -m pip install -e ../PromptValt
+```
+
+The path above is only an example; confirm that it points to the actual core-library checkout and that the public API matches `demo/strategies.py`.
+
+Run the app with the active virtual environment:
+
+```bash
+python -m streamlit run app.py
 ```
 
 Run offline tests:
 
 ```bash
-pytest -q
+python -m pytest -q
 ruff check .
 ```
 
-Offline tests do not require an API key. Provider integration is only available after valid credentials and dependencies are configured.
+Offline tests do not require an API key. A real provider request requires valid credentials and an available selected model.
 
 ## First-run checklist
 
-1. [ ] Verify the PromptVault package import and public constructor/result fields against the actual core repository.
-2. [ ] Configure the xAI API key in `.env` or Streamlit secrets.
-3. [ ] Start with the small included synthetic dataset.
-4. [ ] Run the test case in Full history and PromptVault modes with the exact same model and settings.
-5. [ ] Inspect the diagnostics and confirm local token estimates are clearly labelled as estimates.
-6. [ ] Check API limits/pricing and data-use terms before scaling up the benchmark.
+1. [ ] Confirm `OPENROUTER_API_KEY` is set in `.env` (or Streamlit secrets).
+2. [ ] Verify the selected model ID on its [OpenRouter model page](https://openrouter.ai/models?variant=free).
+3. [ ] Verify the PromptVault package import, public constructor, and compression-result fields against the actual core repository.
+4. [ ] Start with a short synthetic recall conversation.
+5. [ ] Test the same conversation in Full history and PromptVault modes with the exact same model and generation parameters.
+6. [ ] Inspect diagnostics and confirm provider usage is separated from local token estimates.
+7. [ ] Check limits, provider availability, and data-use terms before scaling up the benchmark.
 
 ## Layout
 
@@ -78,7 +85,7 @@ PromptVault-demo/
 │   ├── config.py
 │   ├── providers/
 │   │   ├── base.py
-│   │   └── grok.py
+│   │   └── openrouter.py
 │   ├── strategies.py
 │   ├── chat_service.py
 │   ├── metrics.py
@@ -94,21 +101,26 @@ PromptVault-demo/
 └── PromptVault_demo.md
 ```
 
-## Provider and privacy note
+## Provider, rate-limit, and privacy notes
 
-Grok via xAI is the configured API adapter. Free-tier eligibility, model IDs, context limits, rate limits, pricing, and data-use terms can change. Check the provider's current official documentation before running experiments. Use only synthetic prompts for this demo unless the applicable xAI data-use terms have been reviewed and data owners have approved. API access and billing are separate from any consumer Grok subscription.
+OpenRouter's free-model variants are rate-limited. Its current free-model page documents a limit of 20 requests per minute and 50 requests per day for `:free` variants; buying at least $10 in credits may raise the daily free-model allowance. Check the live page because limits can change. Model availability can also vary by provider/capacity, so the demo surfaces request errors rather than silently switching model IDs.
 
-- xAI API quickstart: https://docs.x.ai/developers/quickstart
-- xAI model IDs and pricing: https://docs.x.ai/developers/models
-- xAI Responses API: https://docs.x.ai/developers/rest-api-reference/inference/responses
+The selected [NVIDIA Nemotron 3 Ultra free endpoint](https://openrouter.ai/nvidia/nemotron-3-ultra-550b-a55b:free) advertises up to a 1M context window, but that is not a guarantee that every request at that size will succeed. The endpoint page states that requests may be logged for security and used to improve NVIDIA products. Use synthetic conversations only; do not send private histories, secrets, credentials, or proprietary information.
+
+- OpenRouter quickstart: https://openrouter.ai/docs/quickstart
+- OpenRouter free models: https://openrouter.ai/collections/free-models
+- OpenRouter pricing/limits: https://openrouter.ai/pricing
+- Selected model card: https://openrouter.ai/nvidia/nemotron-3-ultra-550b-a55b:free
 - Streamlit chat elements: https://docs.streamlit.io/develop/api-reference/chat
 
 ## What is intentionally not implemented yet
 
-- Additional provider adapters (OpenRouter, Groq, Gemini).
+- Fully validated PromptVault integration with the core package's actual API.
+- Full automated fair-comparison UI/export workflow.
+- Additional provider adapters (Gemini, Groq, xAI/Grok).
 - RAG/vector database or persistent multi-user storage.
 - Authentication or production deployment.
 - Unverified support for system, tool, image, audio, or other multimodal PromptVault messages.
 - Claims that compression always improves answer quality.
 
-See [`PromptVault_demo.md`](PromptVault_demo.md) for the phased implementation plan and evaluation rules.
+See [`PromptVault_demo.md`](PromptVault_demo.md) for the implementation plan and evaluation rules.

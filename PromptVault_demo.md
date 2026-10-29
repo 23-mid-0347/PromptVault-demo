@@ -1,11 +1,11 @@
 # PromptVault Demo — Implementation Plan
 
-**Document version:** V1  
+**Document version:** V2  
 **Created:** 2026-10-28  
 **Project repository:** https://github.com/23-mid-0347/PromptVault-demo  
 **Python package/import:** `promptvault`  
 **App framework:** Streamlit  
-**Status:** Planning — do not treat the demo or evaluation as implemented until the code is committed and the tests are observed passing.
+**Status:** Planning / provider shift — OpenRouter is the selected first API integration. Do not treat the demo or evaluation as implemented until the API-backed smoke test, core-library checks, and tests are observed passing.
 
 ---
 
@@ -66,7 +66,7 @@ Confirm the actual names and result-field semantics against the checked-out impl
 ### In scope
 
 - A working Streamlit chat interface.
-- A configurable cloud LLM provider, starting with the xAI/Grok API.
+- A configurable cloud LLM provider, starting with OpenRouter free model variants where eligible.
 - A provider abstraction so a second API can be added without rewriting chat logic.
 - A switch between full conversation history and PromptVault-compressed history.
 - An automated comparison runner for multiple history strategies.
@@ -87,28 +87,40 @@ Confirm the actual names and result-field semantics against the checked-out impl
 
 ## 4. LLM provider strategy
 
-### Recommended starting point: xAI / Grok API
+### Selected starting point: OpenRouter free model variant
 
-Use the official xAI API as the first provider. The consumer Grok app does not imply free API access; API calls may require credits and are billed separately. Start with the model ID `grok-4.7`, confirm that it is available to the API key, and store the exact model ID in every experiment record.
+Use OpenRouter as the first provider, selecting a **specific free model ID** instead of the `openrouter/free` auto-router for benchmark runs. This keeps the model identity explicit and makes Full history vs. PromptVault comparisons easier to reproduce. OpenRouter documents that free variants use model IDs ending in `:free`, have rate limits, and may be temporarily unavailable.
+
+The initial default in the demo is:
+
+```text
+nvidia/nemotron-3-ultra-550b-a55b:free
+```
+
+OpenRouter's current model page lists this as a free text model with a context window of up to 1 million tokens. That is a provider/model specification, not a guarantee that every request of that length will succeed: upstream capacity, account limits, routing, and prompt/output constraints still apply. Re-check the selected model page before large experiments and record the actual model ID in every run.
 
 Official references:
 
-- xAI API setup: https://docs.x.ai/developers/quickstart
-- xAI model IDs and pricing: https://docs.x.ai/developers/models
-- xAI Responses API: https://docs.x.ai/developers/rest-api-reference/inference/responses
+- OpenRouter quickstart: https://openrouter.ai/docs/quickstart
+- OpenRouter free-model collection: https://openrouter.ai/collections/free-models
+- Selected model card and limits: https://openrouter.ai/nvidia/nemotron-3-ultra-550b-a55b:free
+- OpenRouter pricing and free-tier limits: https://openrouter.ai/pricing
+- OpenRouter rate-limit documentation: https://openrouter.ai/docs/api-reference/limits
 
-Important privacy note: review xAI’s current API data-use and retention terms before submitting any non-synthetic content. Use **synthetic conversations only** in this project until those terms and the data owner’s approval have been checked.
+**Free-tier limits:** OpenRouter currently documents 20 requests/minute and 50 requests/day for free model variants; buying at least $10 in credits raises the documented daily free-model allowance. Limits and plan behavior may change. Failed attempts can count toward daily usage. Do not assume the free tier is unlimited.
 
-### Alternative providers
+**Privacy note:** the selected NVIDIA free endpoint states that its requests may be logged for security and used to improve NVIDIA products. Use synthetic conversations only in this demo. Do not send private chat histories, secrets, credentials, or proprietary data to free endpoints.
+
+### Other providers
 
 | Provider | Role in this plan | Notes |
 |---|---|---|
-| **Grok / xAI API** | First integration | API usage is billed separately from the consumer Grok app; check current model pricing and account credits before testing. |
-| **OpenRouter free models** | Optional second integration | Offers API access to free models, with limits on free requests. Model context length, availability, and provider behavior vary, so log the exact model and provider for every run. See https://openrouter.ai/pricing. |
-| **Groq API** | Optional later integration | Rate limits vary by model/account and can change. Check the account's current limits before using it for a benchmark. See https://console.groq.com/docs/rate-limits. |
-| **Gemini API** | Optional alternative | Model availability, quota, pricing, and data-use terms vary by account and model. See https://ai.google.dev/gemini-api/docs/pricing. |
+| **OpenRouter free models** | First integration | Selected for low-cost prototyping and a range of model choices. Model context, provider availability, free limits, and data practices vary; log the exact model ID for every run. |
+| **Gemini API** | Optional later adapter | Model availability, account eligibility, rate limits, and data-use terms vary. See https://ai.google.dev/gemini-api/docs/pricing. |
+| **Groq API** | Optional later adapter | Limits vary by model/account. See https://console.groq.com/docs/rate-limits. |
+| **Grok / xAI API** | Optional paid comparison | The Grok chatbot's access does not make API calls free. See https://docs.x.ai/developers/pricing. |
 
-**Do not hard-code an API key or assume a free API is unlimited.** The selected model and its current pricing/rate limits must be checked before running a large benchmark. The demo must show a readable message when quota, rate limit, or billing blocks a request.
+**Do not hard-code an API key or assume a free API is unlimited.** The demo must show a readable message when authentication, quota, rate limits, billing, or upstream availability block a request.
 
 ### Provider abstraction
 
@@ -132,7 +144,7 @@ class ChatProvider:
 - finish/stop reason, if available;
 - a safe, user-displayable error when a request fails.
 
-Use the provider's actual token usage as the authoritative API-usage measurement when available. Keep PromptVault's token estimate separate. Do not silently treat estimates as actual provider usage.
+Use provider-reported token usage as the authoritative API-usage measurement when available. Keep PromptVault's local token estimate separate. Do not silently treat estimates as actual provider usage.
 
 ## 5. User experience and screens
 
@@ -215,7 +227,7 @@ The first UI should expose only settings that affect the experiment meaningfully
 
 | Parameter | Initial default / candidates | Reason and validation |
 |---|---|---|
-| `provider` | xAI/Grok | Start with one provider to reduce engineering complexity; keep it replaceable. |
+| `provider` | OpenRouter | Start with one provider to reduce engineering complexity; keep it replaceable. |
 | `model_id` | Selected from currently available models | Model IDs and free-tier eligibility change. Log the exact ID; don't silently switch models in the middle of a run. |
 | `history_strategy` | `promptvault` in chat screen; all strategies in compare screen | Makes compression behavior easy to demonstrate while retaining a full-history control. |
 | `token_budget` | 2,000 for the first demo; benchmark sweep 512, 1,024, 2,000, 4,000 | Shows how the quality/size trade-off changes. Check the actual PromptVault implementation and effective budget before finalizing. |
@@ -315,7 +327,7 @@ PromptVault-demo/
 │   ├── providers/
 │   │   ├── __init__.py
 │   │   ├── base.py                 # common provider interface/result
-│   │   └── grok.py                 # first API implementation
+│   │   └── openrouter.py               # first API implementation
 │   ├── strategies.py               # full, last-N, sliding-window, PromptVault
 │   ├── chat_service.py             # prepare messages and call provider
 │   ├── metrics.py                  # token, quality, latency, cost calculations
@@ -338,10 +350,10 @@ Keep the UI, provider request, context strategy, and metric functions separate. 
 
 - Read keys from environment variables or Streamlit secrets.
 - For local development, use an ignored `.env` file and a loader already accepted by the repository.
-- `.env.example` contains placeholders only, such as `XAI_API_KEY=`.
+- `.env.example` contains placeholders only, such as `OPENROUTER_API_KEY=`.
 - Never put an API key in source code, screenshots, test fixtures, error messages, or committed output files.
 - Never log raw provider request headers or secrets.
-- Use only synthetic prompts in the initial demo because provider data-use terms differ by tier.
+- Use only synthetic prompts in the initial demo because provider data-use terms differ by tier; the selected OpenRouter/NVIDIA free endpoint documents logging and product-improvement use.
 - Keep model selection, provider selection, and API key fields separate. A missing key should create a clear setup message rather than crash the entire app.
 
 ## 12. Implementation phases and checklist
@@ -351,7 +363,7 @@ Keep the UI, provider request, context strategy, and metric functions separate. 
 - [ ] Pull the latest `main` and inspect current `pyproject.toml`, public `PromptVault` API, and README.
 - [ ] Re-run the documented unit, integration, and Ruff commands.
 - [ ] Confirm how `CompressionResult` token fields are counted and whether `compress()` expects the current question separately from history.
-- [ ] Decide which Grok model is available on the account and fits the first test set. Confirm its current context and rate limits.
+- [ ] Confirm the exact OpenRouter free model ID, data-use terms, context length, and free-tier limits that will be used for the first test set.
 
 **Exit condition:** clean baseline tests and one selected model/provider documented. Do not proceed on an assumed API shape.
 
@@ -405,7 +417,7 @@ Keep the UI, provider request, context strategy, and metric functions separate. 
 
 ### Phase 5 — Optional follow-up work
 
-- [ ] Add OpenRouter or Groq as a second provider.
+- [ ] Add Gemini or Groq as a second provider.
 - [ ] Compare additional models as separate experiments.
 - [ ] Increase dataset size and repeat selected cases.
 - [ ] Add a secondary LLM judge only after gold-answer scoring is stable.
@@ -454,12 +466,14 @@ Do not build all benchmark charts before this works. Once the chat and fact-rete
 
 ## 16. Official references checked for this plan
 
-- xAI API model IDs/pricing: https://docs.x.ai/developers/models
-- xAI API setup: https://docs.x.ai/developers/quickstart
+- OpenRouter quickstart: https://openrouter.ai/docs/quickstart
+- OpenRouter free models: https://openrouter.ai/collections/free-models
+- Selected Nemotron free model: https://openrouter.ai/nvidia/nemotron-3-ultra-550b-a55b:free
 - OpenRouter pricing and free-model limits: https://openrouter.ai/pricing
-- Groq rate limits: https://console.groq.com/docs/rate-limits
-- xAI API information: https://x.ai/api
-- xAI API pricing: https://docs.x.ai/developers/pricing
+- OpenRouter rate-limit documentation: https://openrouter.ai/docs/api-reference/limits
+- Gemini API pricing/free-tier terms (possible later provider): https://ai.google.dev/gemini-api/docs/pricing
+- Groq rate limits (possible later provider): https://console.groq.com/docs/rate-limits
+- xAI API pricing (possible later paid comparison): https://docs.x.ai/developers/pricing
 - Streamlit chat elements: https://docs.streamlit.io/develop/api-reference/chat
 
-API prices, model IDs, context windows, free-tier eligibility, and rate limits can change. Re-check the provider's official page immediately before implementation and before publishing benchmark results.
+API prices, model IDs, context windows, free-tier eligibility, and rate limits can change. Re-check the provider's official page immediately before implementation and before publishing benchmark results. The selected OpenRouter free model page also warns that inputs may be logged and used to improve the upstream provider's products; use synthetic data only.

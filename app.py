@@ -6,7 +6,7 @@ import streamlit as st
 
 from demo.chat_service import prepare_history
 from demo.config import get_settings
-from demo.providers.grok import GrokProvider
+from demo.providers.openrouter import OpenRouterProvider
 from demo.strategies import StrategyName
 
 st.set_page_config(page_title="PromptVault Demo", page_icon="🧠", layout="wide")
@@ -14,7 +14,7 @@ st.set_page_config(page_title="PromptVault Demo", page_icon="🧠", layout="wide
 st.title("PromptVault Demo")
 st.caption(
     "Explore the trade-off between conversation-history size and reliable recall. "
-    "Use synthetic data only until provider data-use terms have been reviewed."
+    "Use synthetic data only with free hosted model endpoints."
 )
 
 settings = get_settings()
@@ -26,7 +26,7 @@ with st.sidebar:
         options=[StrategyName.FULL_HISTORY.value, StrategyName.PROMPTVAULT.value],
         format_func=lambda value: "Full history" if value == "full_history" else "PromptVault",
     )
-    model_id = st.text_input("Grok model ID", value=settings.grok_model)
+    model_id = st.text_input("OpenRouter model ID", value=settings.openrouter_model)
     temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
     max_output_tokens = st.number_input(
         "Maximum output tokens", min_value=32, max_value=2048, value=256, step=32
@@ -59,15 +59,15 @@ if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    api_key = settings.xai_api_key
+    api_key = settings.openrouter_api_key
     if not api_key:
         with st.chat_message("assistant"):
             st.error(
-                "xAI API key not found. Add `XAI_API_KEY` to `.env` or "
-                "`.streamlit/secrets.toml`, then restart the app."
+                "OpenRouter API key not found. Add `OPENROUTER_API_KEY` to `.env` or "
+                "`.streamlit/secrets.toml`, then restart the app. Get a key at "
+                "https://openrouter.ai/keys."
             )
     else:
-        provider = GrokProvider(api_key=api_key, model_id=model_id)
         try:
             prepared = prepare_history(
                 history=st.session_state.messages,
@@ -75,6 +75,7 @@ if prompt:
                 token_budget=int(token_budget),
                 preserve_recent_n=int(preserve_recent_n),
             )
+            provider = OpenRouterProvider(api_key=api_key, model_id=model_id.strip())
             result = provider.generate(
                 prepared.messages,
                 temperature=float(temperature),
@@ -83,6 +84,7 @@ if prompt:
             st.session_state.messages.append({"role": "assistant", "content": result.text})
             st.session_state.diagnostics = {
                 "strategy": mode,
+                "provider": result.provider,
                 "model_id": result.model_id,
                 "estimated_prepared_tokens": prepared.estimated_tokens,
                 "compression_seconds": prepared.compression_seconds,
@@ -99,7 +101,21 @@ if prompt:
                 st.markdown(result.text)
         except Exception as exc:  # Surface an actionable error without exposing credentials.
             with st.chat_message("assistant"):
-                st.error(f"The provider request failed: {exc}")
+                status_code = getattr(exc, "status_code", None)
+                if status_code == 401:
+                    st.error("OpenRouter rejected the API key. Check OPENROUTER_API_KEY.")
+                elif status_code == 402:
+                    st.error(
+                        "OpenRouter reports insufficient credits or access for this request. "
+                        "Check your account balance and ensure you selected a free model variant."
+                    )
+                elif status_code == 429:
+                    st.error(
+                        "OpenRouter or the upstream model rate limit was reached. Wait before "
+                        "retrying; failed attempts may still count toward free-tier limits."
+                    )
+                else:
+                    st.error(f"The OpenRouter request failed: {exc}")
 
 if st.session_state.diagnostics:
     with st.expander("Latest request diagnostics", expanded=False):
@@ -107,7 +123,9 @@ if st.session_state.diagnostics:
 
 st.divider()
 st.info(
-    "This scaffold estimates tokens using a transparent rough character-based heuristic. "
-    "It is not a provider tokenizer. Provider-reported usage is shown separately when available. "
-    "The PromptVault integration must be verified against your checked-out library version."
+    "Local token counts use a rough character-based estimate, not the provider tokenizer. "
+    "Provider-reported usage is shown separately when available. The free Nemotron endpoint "
+    "states that requests may be logged and used to improve NVIDIA products; use synthetic "
+    "test conversations only. PromptVault integration fields still need verification against "
+    "your checked-out core library."
 )

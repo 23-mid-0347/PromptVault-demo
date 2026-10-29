@@ -1,0 +1,9 @@
+When applying the OpenRouter patch to an existing PromptVault demo folder:
+
+1. Copy the patch contents into the project root and replace matching files.
+2. Delete demo/providers/gemini.py if present.
+3. Delete demo/providers/grok.py if present.
+4. Keep your existing .env file private, and replace Gemini/xAI environment variable names with OPENROUTER_API_KEY and OPENROUTER_MODEL as shown in .env.example.
+5. Reinstall dependencies and run `python -m streamlit run app.py` from the activated virtual environment.
+
+Do not commit .env or real API keys.
