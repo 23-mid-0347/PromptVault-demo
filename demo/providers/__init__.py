@@ -1,1 +1,1 @@
-"""LLM provider adapters used by the demo."""
+"""Provider adapters for the PromptVault demo."""
