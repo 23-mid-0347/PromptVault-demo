@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import streamlit as st
-
-from demo.chat_service import prepare_history
 from demo.config import get_settings
 from demo.providers.openrouter import OpenRouterProvider
+
+from demo.chat_service import prepare_history
 from demo.strategies import StrategyName
 
 st.set_page_config(page_title="PromptVault Demo", page_icon="🧠", layout="wide")

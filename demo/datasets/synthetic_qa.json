@@ -1,0 +1,84 @@
+[
+  {
+    "case_id": "direct-circuit-001",
+    "category": "direct_recall",
+    "messages": [
+      {"role": "user", "content": "For this fictional test, my preferred racing circuit is Silverstone."},
+      {"role": "assistant", "content": "Got it. Your preferred circuit for this test is Silverstone."}
+    ],
+    "question": "Reply with only the circuit name I mentioned.",
+    "accepted_answers": ["Silverstone"],
+    "supporting_fact": "The user states that the preferred circuit is Silverstone.",
+    "notes": "Direct recall of a fact from an earlier message."
+  },
+  {
+    "case_id": "distractor-call-sign-002",
+    "category": "distractor",
+    "messages": [
+      {"role": "user", "content": "My fictional delivery robot is called Blue Comet."},
+      {"role": "assistant", "content": "Understood: Blue Comet is the robot's name."},
+      {"role": "user", "content": "I like rainy weather, mango ice cream, and reading mystery novels."},
+      {"role": "assistant", "content": "Those sound like fun preferences."},
+      {"role": "user", "content": "For the next example, imagine a trip to a snowy mountain."},
+      {"role": "assistant", "content": "Okay, we can use a snowy mountain as a fictional setting."}
+    ],
+    "question": "Reply with only the name of my fictional delivery robot.",
+    "accepted_answers": ["Blue Comet"],
+    "supporting_fact": "The first user message names the delivery robot Blue Comet.",
+    "notes": "Tests whether a fact survives intervening irrelevant messages."
+  },
+  {
+    "case_id": "updated-team-name-003",
+    "category": "updated_fact",
+    "messages": [
+      {"role": "user", "content": "My fictional racing team is initially named Apex Racing."},
+      {"role": "assistant", "content": "Okay, the initial team name is Apex Racing."},
+      {"role": "user", "content": "I am changing the fictional team name. The current name is Comet Motorsport."},
+      {"role": "assistant", "content": "Understood. The latest team name is Comet Motorsport."}
+    ],
+    "question": "Reply with only the current team name, not the old name.",
+    "accepted_answers": ["Comet Motorsport"],
+    "supporting_fact": "The user updates the team name to Comet Motorsport.",
+    "notes": "Tests whether the latest valid statement takes precedence."
+  },
+  {
+    "case_id": "car-number-004",
+    "category": "direct_recall",
+    "messages": [
+      {"role": "user", "content": "In my fictional racing example, driver Alex Morgan uses car number 27."},
+      {"role": "assistant", "content": "Alex Morgan is associated with car number 27 in the fictional example."}
+    ],
+    "question": "Reply with only the car number assigned to Alex Morgan.",
+    "accepted_answers": ["27"],
+    "supporting_fact": "The user states that Alex Morgan's car number is 27.",
+    "notes": "Short numeric fact recall."
+  },
+  {
+    "case_id": "unanswerable-colour-005",
+    "category": "unanswerable",
+    "messages": [
+      {"role": "user", "content": "My fictional bicycle is named Cedar."},
+      {"role": "assistant", "content": "Got it. The bicycle is named Cedar."},
+      {"role": "user", "content": "I use the bicycle on weekends."},
+      {"role": "assistant", "content": "Thanks for the extra detail."}
+    ],
+    "question": "What colour is the bicycle? Reply with only NOT PROVIDED if its colour was never stated.",
+    "accepted_answers": ["NOT PROVIDED"],
+    "supporting_fact": "No bicycle colour is provided in the conversation.",
+    "notes": "Unanswerable control; tests abstention rather than guessing."
+  },
+  {
+    "case_id": "paraphrase-location-006",
+    "category": "paraphrase",
+    "messages": [
+      {"role": "user", "content": "For a fictional office scenario, the server room is in Building Cedar, room 314."},
+      {"role": "assistant", "content": "Understood. The server room is Building Cedar, room 314."},
+      {"role": "user", "content": "The office scenario also includes a meeting in the lobby."},
+      {"role": "assistant", "content": "Okay, the meeting location is the lobby."}
+    ],
+    "question": "Which room contains the server room? Reply with only the room identifier.",
+    "accepted_answers": ["314"],
+    "supporting_fact": "The server room is located in room 314.",
+    "notes": "Tests retrieval from a paraphrased follow-up question."
+  }
+]
