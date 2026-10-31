@@ -114,6 +114,7 @@ def _promptvault_history(
 ) -> PreparedHistory:
     """Call the PromptVault library and normalize its result for the app."""
     try:
+        # pyrefly: ignore[missing-import]
         from promptvault import PromptVault
     except ImportError as exc:
         raise RuntimeError(
